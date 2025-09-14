@@ -1,0 +1,22 @@
+# Python artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# IDE and editor directories
+.vscode/
+.idea/
+
+# Streamlit specific
+.streamlit/
+secrets.toml
+
+# Secret files
+.env
+secrets.toml

@@ -5,7 +5,6 @@ import pandas as pd
 import urllib.parse
 import re
 
-# --- CONFIGURATION & SETUP ---
 JOB_ROLES = [
     "Software Developer", "Data Scientist", "Data Analyst", "Product Manager", "Project Manager",
     "UI/UX Designer", "DevOps Engineer", "QA Engineer", "Business Analyst", "Machine Learning Engineer",
@@ -36,12 +35,11 @@ SKILLS_DB = [
     'data structures', 'algorithms', 'api', 'rest', 'restful', 'microservices', 'agile', 'scrum', 'testing', 'qa', 'automation'
 ]
 
-# --- CACHED HELPER FUNCTIONS ---
 
 @st.cache_data
 def get_jobs_from_api(query, location, internship_only, entry_level_only, page=1):
     url = "https://jsearch.p.rapidapi.com/search"
-    api_key = st.secrets.get("JSEARCH_KEY")
+    api_key = st.secrets.get("JSEARCH_API_KEY")
     if not api_key:
         st.error("JSearch API key not found. Please add it to your .streamlit/secrets.toml file.")
         return []
@@ -79,7 +77,6 @@ def get_jobs_from_api(query, location, internship_only, entry_level_only, page=1
         st.error(f"An unexpected error occurred: {e}")
         return []
 
-# --- UPDATED SKILL EXTRACTOR WITH STRICTER RULES ---
 def extract_skills(text, skills_list):
     """Extracts skills with special, stricter rules for common false positives."""
     found_skills = set()
@@ -87,15 +84,12 @@ def extract_skills(text, skills_list):
         pattern = r'\b' + re.escape(skill) + r'\b'
         # General case-insensitive search
         if re.search(pattern, text, re.IGNORECASE):
-            # --- START: NEW STRICT RULE FOR ACRONYMS ---
-            # For specific words, we enforce stricter conditions
+            
             if skill.lower() in ['sql', 'api']:
-                # Require them to be in all caps to be considered a skill
-                # This prevents matching "Api" in a name or "sql" in a URL path
+
                 uppercase_pattern = r'\b' + skill.upper() + r'\b'
                 if not re.search(uppercase_pattern, text):
                     continue # Skip this skill if it's not found in ALL CAPS
-            # --- END: NEW STRICT RULE ---
             
             # Normalize skill names before adding to the set
             if skill.lower() in ['js', 'javascript']:
@@ -108,8 +102,7 @@ def extract_skills(text, skills_list):
                 found_skills.add(skill.title())
     return found_skills
 
-# --- STREAMLIT APP UI ---
-
+# UI
 st.set_page_config(page_title="Resume-to-Job  System", layout="wide")
 st.title("🔍 Resume to Job Matching  System")
 st.markdown("Select a role and location, upload your resume, and click 'Find Jobs' to start.")

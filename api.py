@@ -1,12 +1,10 @@
-# api.py
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import pdfplumber
 import re
-import requests  # <-- Make sure to import requests
-import pandas as pd # <-- Make sure to import pandas
+import requests  
+import pandas as pd 
 
-# --- CONFIGURATION (Copied from your app) ---
 JOB_ROLES = [
     "Software Developer", "Data Scientist", "Data Analyst", "Product Manager", "Project Manager",
     "UI/UX Designer", "DevOps Engineer", "QA Engineer", "Business Analyst", "Machine Learning Engineer",
@@ -38,17 +36,10 @@ SKILLS_DB = [
 ]
 
 app = Flask(__name__)
-# This allows your React app (on a different port) to call this API
 CORS(app)
 
-# --- SECURITY WARNING ---
-# Hardcoding API keys is not secure for production.
-# It is better to load them from environment variables.
-# For example: import os; JSEARCH_API_KEY = os.environ.get("JSEARCH_API_KEY")
 JSEARCH_API_KEY = "332fdfcc6dmsh5996abe50ef6b4fp1ee338jsn056cd92de316"
 
-
-# --- HELPER FUNCTIONS (Copied and adapted from your app) ---
 
 def get_jobs_from_api(query, location, internship_only, entry_level_only, page=1):
     url = "https://jsearch.p.rapidapi.com/search"
@@ -73,10 +64,10 @@ def get_jobs_from_api(query, location, internship_only, entry_level_only, page=1
 
     try:
         response = requests.get(url, headers=headers, params=params, timeout=30)
-        response.raise_for_status() # Raises an exception for bad status codes (4xx or 5xx)
+        response.raise_for_status() 
         results = response.json().get("data", [])
         jobs = []
-        if not results: return [] # Return empty if no data
+        if not results: return [] 
         for job in results:
             jobs.append({
                 "title": job.get("job_title", "N/A"),
@@ -109,7 +100,7 @@ def extract_skills(text, skills_list):
             else: found_skills.add(skill.title())
     return found_skills
 
-# --- API ENDPOINTS ---
+# Api endpoints
 
 @app.route('/api/job-roles', methods=['GET'])
 def get_job_roles():
@@ -149,7 +140,6 @@ def match_jobs():
         if not jobs:
              return jsonify({ "resume_skills": sorted(list(resume_skills)), "job_matches": [] })
 
-        # --- Job Enrichment and Sorting Logic (Copied from your app) ---
         enriched_jobs = []
         for job in jobs:
             job_skills = extract_skills(job['description'], SKILLS_DB)
@@ -157,7 +147,9 @@ def match_jobs():
             job['matching_skills_count'] = len(matching_skills)
             job['missing_skills_count'] = len(job_skills - matching_skills)
             job['total_skills_in_job'] = len(job_skills)
-            # Add the skill lists themselves for detailed view in frontend
+
+            # matching skills vs non matching logic
+
             job['matching_skills'] = sorted(list(matching_skills))
             job['missing_skills'] = sorted(list(job_skills - resume_skills))
             enriched_jobs.append(job)
@@ -167,7 +159,6 @@ def match_jobs():
             ascending=[False, True]
         ).reset_index(drop=True)
         
-        # Convert DataFrame back to list of dictionaries for JSON response
         sorted_jobs = job_matches_df.to_dict('records')
 
         return jsonify({
